@@ -11,6 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+import bs4
 
 from pytube import YouTube
 
@@ -74,6 +75,9 @@ def download_resource(drive, link, folders_dictionary, file_extention, counter):
 def youtube_download(drive, lnk, folders_dictionary, counter):
     drive.get(lnk)
     soft_log(counter)
+
+    WebDriverWait(drive, 100).until(EC.presence_of_element_located(
+        (By.XPATH, "//p[@class='lecture-topic lighter truncate']")))
 
     sub_name = drive.find_element_by_xpath("//p[@class='lecture-topic lighter truncate']").text
     sub_name = re.sub(r':', '', sub_name)
@@ -207,21 +211,32 @@ try:
         print(f'Links for the lecture: {len(resources_urls)}')
 
         for link in resources_urls:
+
             resource_name = link.text
             resource_link = link['href']
             resource_initial = resource_link
             if 'https' not in resource_link:
                 resource_link = f'https://softuni.bg{resource_link}'
-            if 'Presentation' in resource_name:
-                download_resource(sub_driver, resource_link, short_dict, '.pptx', count)
-            if 'Lab' in resource_name:
-                download_resource(sub_driver, resource_link, short_dict, '.docx', count)
-            if resource_name == 'Exercise':
-                download_resource(sub_driver, resource_link, short_dict, '.docx', count)
-            if 'More Exercise' in resource_name:
-                download_resource(sub_driver, resource_link, short_dict, '_MORE.docx', count)
+
             if 'Видео' in resource_name and 'youtu.be' not in resource_initial:
                 youtube_download(sub_driver, resource_link, short_dict, count)
+
+            # if 'Presentation' in resource_name \
+            #         or 'презентация' in resource_name.lower() \
+            #         or 'pptx' in resource_name.lower():
+            #     download_resource(sub_driver, resource_link, short_dict, '.pptx', count)
+            #
+            # if 'more exercise' in resource_name.lower():
+            #     download_resource(sub_driver, resource_link, short_dict, '_MORE.docx', count)
+            #     continue
+            #
+            # if 'lab' in resource_name.lower() \
+            #         or 'exercise' in resource_name.lower() \
+            #         or 'лаб' in resource_name.lower() \
+            #         or 'упражнение' in resource_name.lower() \
+            #         or 'guide' in resource_name.lower() \
+            #         or 'document' in resource_name.lower():
+            #     download_resource(sub_driver, resource_link, short_dict, '.docx', count)
 
             print(resource_name, resource_link)
         print()
